@@ -8,7 +8,11 @@ const port = process.env.PORT || 4000;
 // Serve static React files
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Default route to fix routing error
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+};
+
+// Default route
 app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'), 
   function (err) {
