@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
+import 'normalize.css';
 
 // Import global components
 import { Navbar } from './components';
 
+// Global app styles
+import './App.css';
+
 // Pages and custom history for routing
-import { Home, About, Login, Profile } from './pages';
+import { Home, About, Register, Login, Profile } from './pages';
 import { history } from './utils/history';
 
 // Global context for storing authenticated user
-import {AuthProvider} from './context/Auth/index';
-import {UserProvider, useCountState, useCountDispatch} from './context/user';
+import {UserProvider} from './context/user';
 
 const App = () => {
   return(
@@ -22,13 +25,9 @@ const App = () => {
           <Switch>
             <Route exact path='/' component={Home} />
             <Route exact path='/about' component={About} />
+            <Route exact path='/register' component={Register} />
             <Route exact path='/login' component={Login} />
-            <PrivateRoute 
-              exact 
-              path='/profile' 
-              user={window.localStorage.getItem('current_user')} 
-              component={Profile} 
-            />
+            <PrivateRoute exact path='/profile' component={Profile} />
           </Switch>
         </main>
       </UserProvider>
@@ -37,16 +36,17 @@ const App = () => {
 };
 
 // Creating a PrivateRoute 
-const PrivateRoute = ({ component: Component, user, ...rest }) => {
+const PrivateRoute = ({ component: Component, ...rest }) => {
+  const currentUser = JSON.parse(window.localStorage.getItem('current_user'));
+  const isAuth = currentUser !== null ? currentUser.isAuth : false;
+
   return (
-    <Route {...rest} render={
-      props => {
-        if (user !== null) {
-          return <Component {...rest} {...props} />
-        } else {
-          return <Redirect to={{pathname: '/login'}} />
-        }
-      }
+    <Route {...rest} render={(props) => (
+      isAuth ? (
+        <Component {...props} />
+      ) : (
+        <Redirect to={{pathname: '/login'}} />
+      ))
     } />
   )
 }

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Redirect, useHistory } from 'react-router-dom';
 
-import { useAuthDispatch } from '../../context/Auth/index';
-import { history } from '../../utils/history';
-
-import {CountProvider, useUserState, useUserDispatch} from '../../context/user';
+// Context, dispatch, and user actions for handling auth
+import {useUserState, useUserDispatch} from '../../context/user';
+import {userActions} from '../../actions/user.actions';
 
 const Login = () => {
-  const { current_user } = useUserState();
+  const { isAuth } = useUserState();
   const dispatch = useUserDispatch();
+  const history = useHistory();
 
   const [form, setForm] = useState({
     username: '',
@@ -20,30 +21,24 @@ const Login = () => {
     setForm(prevState => ({...prevState, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    const loginResponse = await userActions.login(form.username, form.password);
 
-    if (form.username && form.password) {
-      axios.post('/api/auth/login', {
-        username: form.username,
-        password: form.password
-      }).then(response => {
-        if (response.status === 200) {
-          let resData = response.data;
-
-          dispatch({ type: 'LOGIN',
-            payload: {
-              isAuth: true,
-              username: resData.username
-            }
-          })
-
-          history.push('/profile');
-          history.go();
+    // Set user context if login is successful
+    if (loginResponse.status === 200) {
+      dispatch({ type: 'LOGIN',
+        payload: {
+          isAuth: true,
+          username: loginResponse.data.username
         }
       })
+
+      history.push('/profile');
     }
   }
+
+  if (isAuth) return(<Redirect to={{pathname: '/profile'}} />)
 
   return(
     <div>
